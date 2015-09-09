@@ -33,7 +33,7 @@ class BlockUserInfo extends Module
 	{
 		$this->name = 'blockuserinfo';
 		$this->tab = 'front_office_features';
-		$this->version = '0.4.0';
+		$this->version = '2.0.0';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
@@ -41,12 +41,12 @@ class BlockUserInfo extends Module
 
 		$this->displayName = $this->l('User info block');
 		$this->description = $this->l('Adds a block that displays information about the customer.');
-		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+		$this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
 	}
 
 	public function install()
 	{
-		return (parent::install() && $this->registerHook('displayTop') && $this->registerHook('displayNav') && $this->registerHook('displayHeader'));
+		return (parent::install() && $this->registerHook('displayTop') && $this->registerHook('displayNav'));
 	}
 
 	/**
@@ -60,25 +60,25 @@ class BlockUserInfo extends Module
 		if (!$this->active)
 			return;
 
+		$logged = $this->context->customer->isLogged();
+		$customerName = '';
+		if ($logged) {
+			$customerName = sprintf(
+				$this->l('%1$s %2$s'),
+				$this->context->customer->firstname,
+				$this->context->customer->lastname
+			);
+		}
+
 		$this->smarty->assign(array(
-			'cart' => $this->context->cart,
-			'cart_qties' => $this->context->cart->nbProducts(),
-			'logged' => $this->context->customer->isLogged(),
-			'customerName' => ($this->context->customer->logged ? $this->context->customer->firstname.' '.$this->context->customer->lastname : false),
-			'firstName' => ($this->context->customer->logged ? $this->context->customer->firstname : false),
-			'lastName' => ($this->context->customer->logged ? $this->context->customer->lastname : false),
-			'order_process' => Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order'
+			'logged' => $logged,
+			'customerName' => $customerName,
 		));
 		return $this->display(__FILE__, 'blockuserinfo.tpl');
 	}
 
-	public function hookDisplayHeader($params)
-	{
-		$this->context->controller->addCSS(($this->_path).'blockuserinfo.css', 'all');
-	}
-
 	public function hookDisplayNav($params)
 	{
-		return $this->display(__FILE__, 'nav.tpl');
+		return $this->hookDisplayTop($params);
 	}
 }
