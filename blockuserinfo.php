@@ -24,10 +24,12 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
+use PrestaShop\PrestaShop\Core\Business\Module\WidgetInterface;
+
 if (!defined('_PS_VERSION_'))
 	exit;
 
-class BlockUserInfo extends Module
+class BlockUserInfo extends Module implements WidgetInterface
 {
 	public function __construct()
 	{
@@ -44,18 +46,7 @@ class BlockUserInfo extends Module
 		$this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
 	}
 
-	public function install()
-	{
-		return (parent::install() && $this->registerHook('displayNav'));
-	}
-
-	/**
-	* Returns module content for header
-	*
-	* @param array $params Parameters
-	* @return string Content
-	*/
-	public function hookDisplayTop($params)
+	public function getWidgetVariables($hookName, array $configuration)
 	{
 		if (!$this->active)
 			return;
@@ -70,15 +61,20 @@ class BlockUserInfo extends Module
 			);
 		}
 
-		$this->smarty->assign(array(
-			'logged' => $logged,
-			'customerName' => $customerName,
-		));
-		return $this->display(__FILE__, 'blockuserinfo.tpl');
+		$link = $this->context->link;
+
+		return [
+			'logged' 			=> $logged,
+			'customerName' 		=> $customerName,
+			'logout_url'		=> $link->getPageLink('index', true, NULL, 'mylogout'),
+			'my_account_url'	=> $link->getPageLink('my-account', true),
+
+		];
 	}
 
-	public function hookDisplayNav($params)
+	public function renderWidget($hookName, array $configuration)
 	{
-		return $this->hookDisplayTop($params);
+		$this->smarty->assign($this->getWidgetVariables($hookName, $configuration));
+		return $this->display(__FILE__, 'blockuserinfo.tpl');
 	}
 }
